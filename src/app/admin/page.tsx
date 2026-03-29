@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import { supabase } from "@/lib/supabase";
 import type { Photo } from "@/lib/supabase";
 
@@ -73,6 +74,8 @@ export default function AdminPage() {
           description: description.trim() || null,
           image_url: urlData.publicUrl,
           category,
+          show_on_home: false,
+          show_in_recent: false,
         });
       }
 
@@ -113,6 +116,26 @@ export default function AdminPage() {
     } catch (err) {
       console.error(err);
       alert("Delete failed.");
+    }
+  }
+
+  async function handleToggleHomePage(id: string, currentValue: boolean) {
+    try {
+      await supabase.from("photos").update({ show_on_home: !currentValue }).eq("id", id);
+      fetchPhotos();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update home page status.");
+    }
+  }
+
+  async function handleToggleRecent(id: string, currentValue: boolean) {
+    try {
+      await supabase.from("photos").update({ show_in_recent: !currentValue }).eq("id", id);
+      fetchPhotos();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update recent work status.");
     }
   }
 
@@ -292,25 +315,55 @@ export default function AdminPage() {
               {photos.map((photo) => (
                 <div
                   key={photo.id}
-                  className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-colors"
+                  className="flex flex-col gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-colors"
                 >
-                  <img
-                    src={photo.image_url}
-                    alt={photo.title || "Photo"}
-                    className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{photo.title || "Untitled"}</p>
-                    <p className="text-sm text-white/60 truncate">
-                      {photo.category} • {new Date(photo.created_at).toLocaleDateString()}
-                    </p>
+                  <div className="flex items-start gap-4">
+                    <Image
+                      src={photo.image_url}
+                      alt={photo.title || "Photo"}
+                      width={80}
+                      height={80}
+                      className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{photo.title || "Untitled"}</p>
+                      <p className="text-sm text-white/60 truncate">
+                        {photo.category} • {new Date(photo.created_at).toLocaleDateString()}
+                      </p>
+                      {photo.show_on_home && (
+                        <p className="text-sm text-accent font-medium">Shown on Home Page</p>
+                      )}
+                      {photo.show_in_recent && (
+                        <p className="text-sm text-accent font-medium">Shown in Recent Work</p>
+                      )}
+                    </div>
                   </div>
-                  <button
-                    onClick={() => handleDelete(photo.id, photo.image_url)}
-                    className="px-3 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors text-sm flex-shrink-0"
-                  >
-                    Remove
-                  </button>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={photo.show_on_home}
+                        onChange={() => handleToggleHomePage(photo.id, photo.show_on_home)}
+                        className="rounded border-white/20 bg-gray-800 text-accent focus:ring-accent"
+                      />
+                      Home
+                    </label>
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={photo.show_in_recent}
+                        onChange={() => handleToggleRecent(photo.id, photo.show_in_recent)}
+                        className="rounded border-white/20 bg-gray-800 text-accent focus:ring-accent"
+                      />
+                      Recent Work
+                    </label>
+                    <button
+                      onClick={() => handleDelete(photo.id, photo.image_url)}
+                      className="px-3 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors text-sm"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

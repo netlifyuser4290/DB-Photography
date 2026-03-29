@@ -21,9 +21,9 @@ async function getPhotos() {
 export default async function GalleryPage({
   searchParams,
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: { category?: string };
 }) {
-  const params = await searchParams;
+  const category = (searchParams.category || "all").toLowerCase();
   const photos = await getPhotos();
 
   return (
@@ -40,11 +40,11 @@ export default async function GalleryPage({
             </Link>
           </div>
           <h1 className="font-display text-4xl text-charcoal text-center mb-12">
-            {params.category
-              ? `${params.category.charAt(0).toUpperCase() + params.category.slice(1)} Gallery`
+            {category && category !== "all"
+              ? `${category.charAt(0).toUpperCase() + category.slice(1)} Gallery`
               : "Photo Gallery"}
           </h1>
-          <GooglePhotosGrid photos={photos} categoryFilter={params.category} />
+          <GooglePhotosGrid photos={photos} categoryFilter={category} />
         </div>
       </main>
     </>

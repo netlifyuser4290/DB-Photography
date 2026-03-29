@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import type { Photo } from "@/lib/supabase";
 import Lightbox from "./Lightbox";
 
@@ -82,12 +83,12 @@ export default function PhotoGrid({ photos }: PhotoGridProps) {
               onClick={() => setLightboxPhoto(photo)}
               className="block w-full text-left group"
             >
-              <div className="relative overflow-hidden rounded-sm bg-charcoal/50">
-                <img
+              <div className="relative overflow-hidden rounded-sm bg-charcoal/50 aspect-[4/5] sm:aspect-[3/4]">
+                <Image
                   src={photo.image_url}
                   alt={photo.title || "Photo"}
-                  className="w-full h-auto object-cover aspect-[4/5] sm:aspect-[3/4]"
-                  loading="lazy"
+                  fill
+                  className="object-cover"
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-5">

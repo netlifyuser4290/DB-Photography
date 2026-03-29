@@ -19,14 +19,56 @@ async function getPhotos() {
   return data ?? [];
 }
 
+async function getHomePagePhotos() {
+  try {
+    const { data, error } = await supabase
+      .from("photos")
+      .select("*")
+      .eq("show_on_home", true)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      // fallback if column is missing
+      console.warn("Home page photos query failed (show_on_home?). Falling back to all photos.", error);
+      return [];
+    }
+    return data ?? [];
+  } catch (err) {
+    console.error("Unexpected error fetching home page photos:", err);
+    return [];
+  }
+}
+
+async function getRecentWorkPhotos() {
+  try {
+    const { data, error } = await supabase
+      .from("photos")
+      .select("*")
+      .eq("show_in_recent", true)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      // fallback if column is missing
+      console.warn("Recent work photos query failed (show_in_recent?). Falling back to all photos.", error);
+      return [];
+    }
+    return data ?? [];
+  } catch (err) {
+    console.error("Unexpected error fetching recent work photos:", err);
+    return [];
+  }
+}
+
 export default async function HomePage() {
   const photos = await getPhotos();
+  const homePagePhotos = await getHomePagePhotos();
+  const recentWorkPhotos = await getRecentWorkPhotos();
 
   return (
     <>
       <Header />
 
-      <HeroSlider photos={photos} />
+      <HeroSlider photos={homePagePhotos} />
 
       {/* About Section */}
       <section id="about" className="py-[120px] bg-gradient-to-br from-gray-50 to-gray-100 text-center">
@@ -50,7 +92,7 @@ export default async function HomePage() {
       </section>
 
       {/* Gallery Section */}
-      <HomeGallery photos={photos} />
+      <HomeGallery photos={recentWorkPhotos.length ? recentWorkPhotos : photos} />
 
       {/* Services Section */}
       <section id="services" className="py-[120px] bg-gray-50">

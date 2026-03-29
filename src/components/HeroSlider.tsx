@@ -19,7 +19,7 @@ interface HeroSliderProps {
 
 export default function HeroSlider({ photos = [] }: HeroSliderProps) {
   const heroImages =
-    photos.length >= 3
+    photos.length > 0
       ? photos.slice(0, 6).map((p) => p.image_url)
       : FALLBACK_IMAGES;
 

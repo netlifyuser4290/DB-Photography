@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Image from "next/image";
 import type { Photo } from "@/lib/supabase";
 
 interface LightboxProps {
@@ -38,11 +39,15 @@ export default function Lightbox({ photo, photos, onClose, onNavigate }: Lightbo
         className="relative max-w-[95vw] max-h-[95vh] flex items-center justify-center"
         onClick={(e) => e.stopPropagation()}
       >
-        <img
-          src={photo.image_url}
-          alt={photo.title || "Photo"}
-          className="max-w-full max-h-[90vh] object-contain rounded"
-        />
+        <div className="relative w-full h-full max-w-[95vw] max-h-[90vh]">
+          <Image
+            src={photo.image_url}
+            alt={photo.title || "Photo"}
+            fill
+            className="object-contain rounded"
+            sizes="(max-width: 95vw) 100vw, 95vw"
+          />
+        </div>
         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent text-white">
           <p className="font-display text-xl">{photo.title || "Untitled"}</p>
           {photo.description && (

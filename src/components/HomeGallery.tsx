@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Photo } from "@/lib/supabase";
 
 interface HomeGalleryProps {
@@ -47,11 +48,7 @@ export default function HomeGallery({ photos }: HomeGalleryProps) {
             >
               <div className="relative overflow-hidden rounded-[20px] shadow-[0_25px_50px_rgba(0,0,0,0.15)] transition-all duration-400 hover:-translate-y-4 hover:shadow-[0_35px_70px_rgba(0,0,0,0.25)] cursor-pointer">
                 {item.imageUrl ? (
-                  <img
-                    src={item.imageUrl}
-                    alt={item.title}
-                    className="w-full h-[180px] sm:h-[280px] lg:h-[350px] object-cover transition-transform duration-400 group-hover:scale-110"
-                  />
+                  <Image src={item.imageUrl} alt={item.title} width={400} height={350} className="w-full h-[180px] sm:h-[280px] lg:h-[350px] object-cover transition-transform duration-400 group-hover:scale-110" />
                 ) : (
                   <div className="w-full h-[180px] sm:h-[280px] lg:h-[350px] bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
                     <span className="text-6xl text-gray-400">

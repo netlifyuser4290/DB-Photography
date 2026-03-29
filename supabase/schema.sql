@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS photos (
   description TEXT,
   image_url TEXT NOT NULL,
   category TEXT DEFAULT 'general',
+  show_on_home BOOLEAN DEFAULT FALSE,
+  show_in_recent BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
