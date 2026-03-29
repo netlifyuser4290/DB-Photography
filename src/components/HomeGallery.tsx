@@ -38,7 +38,7 @@ export default function HomeGallery({ photos }: HomeGalleryProps) {
           Recent Work
           <span className="block w-[60px] h-[3px] bg-accent mx-auto mt-4" />
         </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-12">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mt-12">
           {previewItems.map((item) => (
             <Link
               key={item.id}
@@ -50,10 +50,10 @@ export default function HomeGallery({ photos }: HomeGalleryProps) {
                   <img
                     src={item.imageUrl}
                     alt={item.title}
-                    className="w-full h-[350px] object-cover transition-transform duration-400 group-hover:scale-110"
+                    className="w-full h-[180px] sm:h-[280px] lg:h-[350px] object-cover transition-transform duration-400 group-hover:scale-110"
                   />
                 ) : (
-                  <div className="w-full h-[350px] bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                  <div className="w-full h-[180px] sm:h-[280px] lg:h-[350px] bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
                     <span className="text-6xl text-gray-400">
                       {item.icon === "fa-heart" && "❤"}
                       {item.icon === "fa-user" && "👤"}

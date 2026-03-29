@@ -9,7 +9,7 @@ A clean, modern portfolio website for photographers with an admin panel to add a
 - **Remove photos** – Delete photos from the portfolio
 - **Admin panel** – Protected with login (username/password)
 - **Content protection** – Discourages screenshots, right-click, and drag on images
-- **Free hosting** – Deploy on Vercel + Supabase (both free tiers)
+- **Free hosting** – Deploy on Netlify + Supabase (both free tiers)
 
 ---
 
@@ -86,21 +86,22 @@ Open [http://localhost:3000](http://localhost:3000) for the gallery. For the adm
 
 ---
 
-## Deploy for Free (Vercel)
+## Deploy on Netlify
 
 1. Push your code to **GitHub** (create a repo and push).
 
-2. Go to [vercel.com](https://vercel.com) and sign in with GitHub.
+2. Go to [netlify.com](https://netlify.com) and sign in with GitHub.
 
-3. **Import** your repository and click **Deploy**.
+3. Click **Add new site** → **Import an existing project** → choose your repo.
 
-4. Before deploying, add environment variables:
+4. Netlify auto-detects Next.js. Add these **Environment variables** before deploying:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `ADMIN_USER`, `ADMIN_PASSWORD` (or keep defaults)
+   - `ADMIN_USER` (default: dhruv)
+   - `ADMIN_PASSWORD` (default: dbphotography)
    - `ADMIN_SESSION_SECRET` (use a strong random string in production)
 
-5. Deploy. Your site will be live at `https://your-project.vercel.app`.
+5. Click **Deploy site**. Your site will be live at `https://your-site-name.netlify.app`.
 
 ---
 
@@ -108,7 +109,7 @@ Open [http://localhost:3000](http://localhost:3000) for the gallery. For the adm
 
 | Service   | Free Tier           | Usage                          |
 |----------|----------------------|--------------------------------|
-| Vercel   | 100GB bandwidth      | Hosts the Next.js app          |
+| Netlify  | 100GB bandwidth      | Hosts the Next.js app          |
 | Supabase | 1GB storage, 500MB DB| Database + image storage       |
 
 ---

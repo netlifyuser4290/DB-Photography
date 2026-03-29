@@ -19,16 +19,35 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Content protection - discourage copying/screenshots */
-.content-protected img {
+/* Content protection - prevent selection and copying */
+.content-protected,
+.content-protected *,
+.content-protected *::before,
+.content-protected *::after {
   -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
   user-select: none;
+  -webkit-touch-callout: none; /* iOS: disable long-press callout (Copy, Save, etc.) */
+}
+
+/* Allow selection in form fields (admin login, etc.) */
+.content-protected input,
+.content-protected textarea,
+.content-protected [contenteditable="true"] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+.content-protected img {
   -webkit-user-drag: none;
   -khtml-user-drag: none;
   -moz-user-drag: none;
   -o-user-drag: none;
   user-drag: none;
-  pointer-events: auto;
 }
 
 /* Nav link hover underline */

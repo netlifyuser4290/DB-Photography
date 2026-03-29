@@ -33,14 +33,14 @@ export default function Header() {
                 </Link>
               </li>
             ))}
-            <li>
+            {/* <li>
               <Link
                 href="/admin"
                 className="nav-link relative text-charcoal font-medium hover:text-accent transition-colors"
               >
                 Admin
               </Link>
-            </li>
+            </li> */}
           </ul>
           <button
             type="button"
@@ -79,7 +79,7 @@ export default function Header() {
               </Link>
             </li>
           ))}
-          <li>
+          {/* <li>
             <Link
               href="/admin"
               className="block py-4 text-lg text-charcoal border-b border-black/10 hover:text-accent"
@@ -87,7 +87,7 @@ export default function Header() {
             >
               Admin
             </Link>
-          </li>
+          </li> */}
         </ul>
       </div>
       {mobileOpen && (

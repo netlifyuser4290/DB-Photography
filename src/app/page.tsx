@@ -128,9 +128,9 @@ export default async function HomePage() {
         <p>
           © {new Date().getFullYear()} DB Photography. All rights reserved. | Designed by Dhruv
           Badlawala |{" "}
-          <Link href="/admin" className="text-accent font-semibold hover:text-white">
+          {/* <Link href="/admin" className="text-accent font-semibold hover:text-white">
             Admin
-          </Link>
+          </Link> */}
         </p>
       </footer>
     </>

@@ -3,42 +3,76 @@
 import { useEffect } from "react";
 
 /**
- * Content protection - discourages screenshots and copying.
- * Note: Cannot fully prevent screenshots/recording (OS-level capture, cameras, etc. bypass this).
+ * Content protection - prevents text selection, copying, right-click, and discourages screenshots.
+ * Note: OS-level screenshots (Print Screen, phone screenshot) cannot be fully blocked by websites.
  */
 export default function ContentProtection() {
   useEffect(() => {
-    // Prevent right-click context menu on images
+    // Prevent right-click context menu on entire page
     function handleContextMenu(e: MouseEvent) {
-      const target = e.target as HTMLElement;
-      if (target.tagName === "IMG" || target.closest("[data-protected]")) {
-        e.preventDefault();
-      }
+      e.preventDefault();
     }
 
-    // Prevent drag on images
+    // Prevent drag on images and other elements
     function handleDragStart(e: DragEvent) {
+      e.preventDefault();
+    }
+
+    // Prevent text selection (selectstart)
+    function handleSelectStart(e: Event) {
+      e.preventDefault();
+    }
+
+    // Prevent copy (allow in admin form fields)
+    function handleCopy(e: ClipboardEvent) {
       const target = e.target as HTMLElement;
-      if (target.tagName === "IMG") {
+      if (target.tagName !== "INPUT" && target.tagName !== "TEXTAREA") {
         e.preventDefault();
       }
     }
 
-    // Intercept Print Screen key (limited - only blocks when page has focus)
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "PrintScreen") {
+    // Prevent cut (allow in admin form fields)
+    function handleCut(e: ClipboardEvent) {
+      const target = e.target as HTMLElement;
+      if (target.tagName !== "INPUT" && target.tagName !== "TEXTAREA") {
         e.preventDefault();
-        // Flash or obscure - user may still have captured, but we tried
+      }
+    }
+
+    // Prevent paste (allow in admin form fields)
+    function handlePaste(e: ClipboardEvent) {
+      const target = e.target as HTMLElement;
+      if (target.tagName !== "INPUT" && target.tagName !== "TEXTAREA") {
+        e.preventDefault();
+      }
+    }
+
+    // Block Print Screen and common screenshot shortcuts
+    function handleKeyDown(e: KeyboardEvent) {
+      if (
+        e.key === "PrintScreen" ||
+        (e.ctrlKey && e.shiftKey && e.key === "S") ||
+        (e.metaKey && e.shiftKey && e.key === "4")
+      ) {
+        e.preventDefault();
       }
     }
 
     document.addEventListener("contextmenu", handleContextMenu);
     document.addEventListener("dragstart", handleDragStart);
+    document.addEventListener("selectstart", handleSelectStart);
+    document.addEventListener("copy", handleCopy);
+    document.addEventListener("cut", handleCut);
+    document.addEventListener("paste", handlePaste);
     document.addEventListener("keydown", handleKeyDown);
 
     return () => {
       document.removeEventListener("contextmenu", handleContextMenu);
       document.removeEventListener("dragstart", handleDragStart);
+      document.removeEventListener("selectstart", handleSelectStart);
+      document.removeEventListener("copy", handleCopy);
+      document.removeEventListener("cut", handleCut);
+      document.removeEventListener("paste", handlePaste);
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
