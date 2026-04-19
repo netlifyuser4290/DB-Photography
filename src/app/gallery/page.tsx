@@ -1,50 +1,39 @@
-import { supabase } from "@/lib/supabase";
-import Link from "next/link";
-import Header from "@/components/Header";
-import GooglePhotosGrid from "@/components/GooglePhotosGrid";
 
-export const revalidate = 60;
+import { cloudinary } from "@/lib/cloudinary";
+import Header from "@/components/Header";
+import { Photo } from "../admin/page";
 
 async function getPhotos() {
-  const { data, error } = await supabase
-    .from("photos")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Error fetching photos:", error);
-    return [];
-  }
-  return data ?? [];
+  const { resources } = await cloudinary.api.resources({
+    type: "upload",
+    prefix: "db-studio",
+    max_results: 100,
+  });
+  resources.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  return resources;
 }
 
-export default async function GalleryPage({
-  searchParams,
-}: {
-  searchParams: { category?: string };
-}) {
-  const category = (searchParams.category || "all").toLowerCase();
+export default async function GalleryPage() {
   const photos = await getPhotos();
 
   return (
     <>
       <Header />
-      <main className="pt-24 pb-16 min-h-screen bg-gray-50">
-        <div className="max-w-[1200px] mx-auto px-8">
-          <div className="flex items-center gap-4 mb-8">
-            <Link
-              href="/"
-              className="text-accent font-medium flex items-center gap-2 hover:text-accent-dark"
-            >
-              ← Back to Portfolio
-            </Link>
-          </div>
-          <h1 className="font-display text-4xl text-charcoal text-center mb-12">
-            {category && category !== "all"
-              ? `${category.charAt(0).toUpperCase() + category.slice(1)} Gallery`
-              : "Photo Gallery"}
-          </h1>
-          <GooglePhotosGrid photos={photos} categoryFilter={category} />
+      <main className="max-w-[1200px] mx-auto px-8 py-12">
+        <h1 className="font-display text-4xl text-center text-charcoal mb-16 relative">
+          Gallery
+          <span className="block w-[60px] h-[3px] bg-accent mx-auto mt-4" />
+        </h1>
+        <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+          {photos.map((photo: Photo) => (
+            <div key={photo.public_id} className="break-inside-avoid">
+              <img
+                src={photo.secure_url}
+                alt={photo.context?.title || "DB-Studio photo"}
+                className="w-full h-auto object-cover rounded-lg shadow-lg"
+              />
+            </div>
+          ))}
         </div>
       </main>
     </>

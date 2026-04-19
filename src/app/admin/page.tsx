@@ -1,9 +1,22 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { supabase } from "@/lib/supabase";
-import type { Photo } from "@/lib/supabase";
+
+export type Photo = {
+  public_id: string;
+  url: string;
+  secure_url: string;
+  created_at: string;
+  context?: {
+    title?: string;
+    description?: string;
+    category?: string;
+    show_on_home?: string;
+    show_in_recent?: string;
+  };
+};
 
 export default function AdminPage() {
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -16,30 +29,30 @@ export default function AdminPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
 
+  async function fetchPhotos() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/photos");
+      if (!res.ok) throw new Error("Failed to fetch");
+      const { resources } = await res.json();
+      setPhotos(resources);
+    } catch (error) {
+      console.error("Error fetching photos:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
     fetchPhotos();
   }, []);
-
-  async function fetchPhotos() {
-    const { data, error } = await supabase
-      .from("photos")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error:", error);
-      return;
-    }
-    setPhotos(data ?? []);
-    setLoading(false);
-  }
 
   const getTitleForFile = (file: File) => {
     if (title.trim()) return title.trim();
     return file.name.replace(/\.[^/.]+$/, "") || "Untitled";
   };
 
-  async function handleUpload(e: React.FormEvent) {
+  const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     const imageFiles = files.filter((f) => f.type.startsWith("image/"));
     if (imageFiles.length === 0) {
@@ -50,48 +63,39 @@ export default function AdminPage() {
     setUploading(true);
     setUploadProgress({ current: 0, total: imageFiles.length });
 
-    try {
-      for (let i = 0; i < imageFiles.length; i++) {
-        const file = imageFiles[i];
-        setUploadProgress({ current: i + 1, total: imageFiles.length });
-
-        const fileExt = file.name.split(".").pop();
-        const fileName = `${Date.now()}-${i}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from("photos")
-          .upload(fileName, file, { upsert: false });
-
-        if (uploadError) throw uploadError;
-
-        const { data: urlData } = supabase.storage
-          .from("photos")
-          .getPublicUrl(fileName);
-
-        const photoTitle = getTitleForFile(file);
-        await supabase.from("photos").insert({
-          title: photoTitle,
-          description: description.trim() || null,
-          image_url: urlData.publicUrl,
-          category,
-          show_on_home: false,
-          show_in_recent: false,
-        });
-      }
-
-      setTitle("");
-      setDescription("");
-      setCategory("general");
-      setFiles([]);
-      fetchPhotos();
-    } catch (err) {
-      console.error(err);
-      alert("Upload failed. Check console and Supabase setup.");
-    } finally {
-      setUploading(false);
-      setUploadProgress({ current: 0, total: 0 });
+    for (let i = 0; i < imageFiles.length; i++) {
+      const file = imageFiles[i];
+      setUploadProgress({ current: i + 1, total: imageFiles.length });
+      
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onloadend = async () => {
+          try {
+            await fetch("/api/admin/photos", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                file: reader.result,
+                title: getTitleForFile(file),
+                description,
+                category,
+              }),
+            });
+        } catch(e) {
+          console.error('Upload error:', e)
+          alert('Upload failed');
+        }
+      };
     }
-  }
+
+    setUploading(false);
+    setUploadProgress({ current: 0, total: 0 });
+    setTitle("");
+    setDescription("");
+    setCategory("general");
+    setFiles([]);
+    fetchPhotos(); // Refresh
+  };
 
   const handleFiles = useCallback((fileList: FileList | null) => {
     if (!fileList?.length) return;
@@ -103,39 +107,34 @@ export default function AdminPage() {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
-  async function handleDelete(id: string, imageUrl: string) {
+  async function handleDelete(publicId: string) {
     if (!confirm("Remove this photo from the portfolio?")) return;
 
     try {
-      const path = imageUrl.split("/photos/")[1];
-      if (path) {
-        await supabase.storage.from("photos").remove([path]);
-      }
-      await supabase.from("photos").delete().eq("id", id);
-      fetchPhotos();
+      await fetch("/api/admin/photos", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ publicId }),
+      });
+      fetchPhotos(); // Refresh
     } catch (err) {
       console.error(err);
       alert("Delete failed.");
     }
   }
 
-  async function handleToggleHomePage(id: string, currentValue: boolean) {
+  async function handleToggle(publicId: string, context: any, key: string) {
     try {
-      await supabase.from("photos").update({ show_on_home: !currentValue }).eq("id", id);
+      const newValue = !(context?.[key] === 'true');
+      await fetch('/api/admin/photos', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ publicId, key, value: newValue }),
+      });
       fetchPhotos();
     } catch (err) {
       console.error(err);
-      alert("Failed to update home page status.");
-    }
-  }
-
-  async function handleToggleRecent(id: string, currentValue: boolean) {
-    try {
-      await supabase.from("photos").update({ show_in_recent: !currentValue }).eq("id", id);
-      fetchPhotos();
-    } catch (err) {
-      console.error(err);
-      alert("Failed to update recent work status.");
+      alert(`Failed to toggle ${key}`);
     }
   }
 
@@ -314,26 +313,26 @@ export default function AdminPage() {
             <div className="grid sm:grid-cols-2 gap-4">
               {photos.map((photo) => (
                 <div
-                  key={photo.id}
+                  key={photo.public_id}
                   className="flex flex-col gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-colors"
                 >
                   <div className="flex items-start gap-4">
                     <Image
-                      src={photo.image_url}
-                      alt={photo.title || "Photo"}
+                      src={photo.secure_url}
+                      alt={photo.context?.title || "Photo"}
                       width={80}
                       height={80}
                       className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{photo.title || "Untitled"}</p>
+                      <p className="font-medium truncate">{photo.context?.title || "Untitled"}</p>
                       <p className="text-sm text-white/60 truncate">
-                        {photo.category} • {new Date(photo.created_at).toLocaleDateString()}
+                        {photo.context?.category} • {new Date(photo.created_at).toLocaleDateString()}
                       </p>
-                      {photo.show_on_home && (
+                      {photo.context?.show_on_home === 'true' && (
                         <p className="text-sm text-accent font-medium">Shown on Home Page</p>
                       )}
-                      {photo.show_in_recent && (
+                      {photo.context?.show_in_recent === 'true' && (
                         <p className="text-sm text-accent font-medium">Shown in Recent Work</p>
                       )}
                     </div>
@@ -342,8 +341,8 @@ export default function AdminPage() {
                     <label className="flex items-center gap-2 text-sm">
                       <input
                         type="checkbox"
-                        checked={photo.show_on_home}
-                        onChange={() => handleToggleHomePage(photo.id, photo.show_on_home)}
+                        checked={photo.context?.show_on_home === 'true'}
+                        onChange={() => handleToggle(photo.public_id, photo.context, 'show_on_home')}
                         className="rounded border-white/20 bg-gray-800 text-accent focus:ring-accent"
                       />
                       Home
@@ -351,14 +350,14 @@ export default function AdminPage() {
                     <label className="flex items-center gap-2 text-sm">
                       <input
                         type="checkbox"
-                        checked={photo.show_in_recent}
-                        onChange={() => handleToggleRecent(photo.id, photo.show_in_recent)}
+                        checked={photo.context?.show_in_recent === 'true'}
+                        onChange={() => handleToggle(photo.public_id, photo.context, 'show_in_recent')}
                         className="rounded border-white/20 bg-gray-800 text-accent focus:ring-accent"
                       />
                       Recent Work
                     </label>
                     <button
-                      onClick={() => handleDelete(photo.id, photo.image_url)}
+                      onClick={() => handleDelete(photo.public_id)}
                       className="px-3 py-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors text-sm"
                     >
                       Remove
