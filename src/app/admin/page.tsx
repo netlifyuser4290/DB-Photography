@@ -28,6 +28,7 @@ export default function AdminPage() {
   const [category, setCategory] = useState("general");
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [fileUploadProgress, setFileUploadProgress] = useState<{ [key: string]: number }>({});
 
   async function fetchPhotos() {
     setLoading(true);
@@ -61,40 +62,63 @@ export default function AdminPage() {
     }
 
     setUploading(true);
+    setFileUploadProgress({});
     setUploadProgress({ current: 0, total: imageFiles.length });
 
-    for (let i = 0; i < imageFiles.length; i++) {
-      const file = imageFiles[i];
-      setUploadProgress({ current: i + 1, total: imageFiles.length });
-      
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onloadend = async () => {
-          try {
-            await fetch("/api/admin/photos", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                file: reader.result,
-                title: getTitleForFile(file),
-                description,
-                category,
-              }),
-            });
-        } catch(e) {
-          console.error('Upload error:', e)
-          alert('Upload failed');
-        }
-      };
-    }
+    const uploadPromises = imageFiles.map((file) => {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onloadend = () => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", "/api/admin/photos", true);
+          xhr.setRequestHeader("Content-Type", "application/json");
 
-    setUploading(false);
-    setUploadProgress({ current: 0, total: 0 });
-    setTitle("");
-    setDescription("");
-    setCategory("general");
-    setFiles([]);
-    fetchPhotos(); // Refresh
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+              const percentComplete = (event.loaded / event.total) * 100;
+              setFileUploadProgress((prev) => ({ ...prev, [file.name]: percentComplete }));
+            }
+          };
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              setFileUploadProgress((prev) => ({ ...prev, [file.name]: 100 }));
+              setUploadProgress((prev) => ({ ...prev, current: prev.current + 1 }));
+              resolve(xhr.response);
+            } else {
+              reject(new Error(xhr.statusText));
+            }
+          };
+
+          xhr.onerror = () => reject(new Error(xhr.statusText));
+
+          const body = JSON.stringify({
+            file: reader.result,
+            title: getTitleForFile(file),
+            description,
+            category,
+          });
+
+          xhr.send(body);
+        };
+        reader.onerror = (error) => reject(error);
+      });
+    });
+
+    try {
+      await Promise.all(uploadPromises);
+    } catch (error) {
+      console.error("An error occurred during upload:", error);
+      alert("Some files failed to upload.");
+    } finally {
+      setUploading(false);
+      setTitle("");
+      setDescription("");
+      setCategory("general");
+      setFiles([]);
+      fetchPhotos(); // Refresh
+    }
   };
 
   const handleFiles = useCallback((fileList: FileList | null) => {
@@ -266,21 +290,30 @@ export default function AdminPage() {
                   <p className="text-sm text-white/70">
                     {files.length} file{files.length !== 1 ? "s" : ""} selected
                   </p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-col gap-4">
                     {files.map((f, i) => (
-                      <div
-                        key={`${f.name}-${i}`}
-                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 text-sm"
-                      >
-                        <span className="text-white truncate max-w-[160px]">{f.name}</span>
-                        <button
-                          type="button"
-                          onClick={() => removeFile(i)}
-                          className="text-red-400 hover:text-red-300"
-                          aria-label="Remove"
+                      <div key={`${f.name}-${i}`}>
+                        <div
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 text-sm"
                         >
-                          ×
-                        </button>
+                          <span className="text-white truncate max-w-[160px]">{f.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => removeFile(i)}
+                            className="text-red-400 hover:text-red-300 ml-auto"
+                            aria-label="Remove"
+                          >
+                            ×
+                          </button>
+                        </div>
+                        {uploading && (
+                           <div className="relative w-full h-2 mt-2 bg-gray-700 rounded-full">
+                           <div
+                             className="absolute top-0 left-0 h-full bg-accent rounded-full"
+                             style={{ width: `${fileUploadProgress[f.name] || 0}%` }}
+                           />
+                         </div>
+                        )}
                       </div>
                     ))}
                   </div>
