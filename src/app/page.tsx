@@ -1,43 +1,45 @@
 
+import { v2 as cloudinary } from 'cloudinary';
 import Header from "@/components/Header";
 import HeroSlider from "@/components/HeroSlider";
 import HomeGallery from "@/components/HomeGallery";
-import { cloudinary } from "@/lib/cloudinary";
 
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Fetch all photos with context
 async function getPhotos() {
-  const { resources } = await cloudinary.api.resources({
-    type: "upload",
-    prefix: "db-studio",
-    max_results: 100,
-  });
-  resources.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  return resources;
-}
+  console.log("Attempting to fetch photos from Cloudinary...");
+  console.log("Using Cloud Name:", process.env.CLOUDINARY_CLOUD_NAME ? "Loaded" : "MISSING");
 
-async function getHomePagePhotos() {
-  const { resources } = await cloudinary.api.resources({
-    type: "upload",
-    prefix: "db-studio/home",
-    max_results: 100,
-  });
-  resources.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  return resources;
-}
-
-async function getRecentWorkPhotos() {
+  try {
     const { resources } = await cloudinary.api.resources({
-        type: 'upload',
-        prefix: 'db-studio/recent-work',
-        max_results: 100,
+      type: "upload",
+      context: true, // Fetch context data
+      max_results: 100,
     });
+    console.log(`Found ${resources.length} photos with context.`);
     resources.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     return resources;
+  } catch (error) {
+    console.error("Error fetching photos from Cloudinary:", error);
+    return []; // Return an empty array on error
+  }
 }
 
 export default async function HomePage() {
   const photos = await getPhotos();
-  const homePagePhotos = await getHomePagePhotos();
-  const recentWorkPhotos = await getRecentWorkPhotos();
+
+  // Filter photos based on their context
+  const homePagePhotos = photos.filter(
+    (p: any) => p.context?.custom?.show_on_home === 'true'
+  );
+  const recentWorkPhotos = photos.filter(
+    (p: any) => p.context?.custom?.show_in_recent === 'true'
+  );
 
   return (
     <>
@@ -67,7 +69,7 @@ export default async function HomePage() {
       </section>
 
       {/* Gallery Section */}
-      <HomeGallery photos={recentWorkPhotos.length ? recentWorkPhotos : photos} />
+      <HomeGallery photos={recentWorkPhotos} />
 
       {/* Services Section */}
       <section id='services' className='py-[120px] bg-gray-50'>

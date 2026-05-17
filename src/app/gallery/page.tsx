@@ -1,20 +1,25 @@
 
-import { cloudinary } from "@/lib/cloudinary";
+'use client';
+
+import { useState, useEffect } from 'react';
 import Header from "@/components/Header";
-import { Photo } from "../admin/page";
+import { Photo } from "@/types";
 
 async function getPhotos() {
-  const { resources } = await cloudinary.api.resources({
-    type: "upload",
-    prefix: "db-studio",
-    max_results: 100,
-  });
-  resources.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  return resources;
+  const res = await fetch('/api/admin/photos');
+  if (!res.ok) {
+    throw new Error('Failed to fetch photos');
+  }
+  const data = await res.json();
+  return data.resources;
 }
 
-export default async function GalleryPage() {
-  const photos = await getPhotos();
+export default function GalleryPage() {
+  const [photos, setPhotos] = useState<Photo[]>([]);
+
+  useEffect(() => {
+    getPhotos().then(setPhotos);
+  }, []);
 
   return (
     <>

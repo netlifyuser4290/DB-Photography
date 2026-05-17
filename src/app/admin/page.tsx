@@ -3,20 +3,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
+import type { Photo } from "@/types";
 
-export type Photo = {
-  public_id: string;
-  url: string;
-  secure_url: string;
-  created_at: string;
-  context?: {
-    title?: string;
-    description?: string;
-    category?: string;
-    show_on_home?: string;
-    show_in_recent?: string;
-  };
-};
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export default function AdminPage() {
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -123,8 +112,14 @@ export default function AdminPage() {
 
   const handleFiles = useCallback((fileList: FileList | null) => {
     if (!fileList?.length) return;
-    const newFiles = Array.from(fileList).filter((f) => f.type.startsWith("image/"));
-    setFiles((prev) => [...prev, ...newFiles]);
+
+    const validFiles = Array.from(fileList).filter(
+      (file) => file.type.startsWith("image/") && file.size <= MAX_FILE_SIZE
+    );
+
+    if (validFiles.length) {
+      setFiles((prev) => [...prev, ...validFiles]);
+    }
   }, []);
 
   const removeFile = (index: number) => {

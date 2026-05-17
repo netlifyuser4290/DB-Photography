@@ -1,13 +1,18 @@
 
 import { cloudinary } from '@/lib/cloudinary';
 import { NextResponse } from 'next/server';
+import { getCachedPhotos, setCachedPhotos, clearPhotoCache } from '@/lib/photocache';
 
 // GET photos
 export async function GET() {
   try {
+    const cachedPhotos = await getCachedPhotos();
+    if (cachedPhotos) {
+      return NextResponse.json({ resources: cachedPhotos });
+    }
+
     const { resources } = await cloudinary.api.resources({
       type: 'upload',
-      prefix: 'db-studio',
       max_results: 500,
       context: true,
     });
@@ -25,19 +30,12 @@ export async function GET() {
 
     parsedResources.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-    return NextResponse.json({ resources: parsedResources }, {
-      headers: {
-        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=59',
-      },
-    });
+    await setCachedPhotos(parsedResources);
+
+    return NextResponse.json({ resources: parsedResources });
   } catch (error) {
     console.error('Error fetching photos:', error);
-    return NextResponse.json({ error: 'Error fetching photos' }, { 
-        status: 500,
-        headers: {
-            'Cache-Control': 'no-store',
-        }
-    });
+    return NextResponse.json({ error: 'Failed to fetch photos' }, { status: 500 });
   }
 }
 
@@ -57,6 +55,8 @@ export async function POST(req: Request) {
       },
     });
 
+    await clearPhotoCache();
+
     return NextResponse.json(result);
   } catch (error) {
     console.error('Upload error:', error);
@@ -64,33 +64,44 @@ export async function POST(req: Request) {
   }
 }
 
-// PUT to update photo context (e.g., toggle show_on_home)
-export async function PUT(req: Request) {
+// DELETE a photo by public_id
+export async function DELETE(req: Request) {
   try {
-    const { publicId, key, value } = await req.json();
-    if (!publicId || !key || typeof value === 'undefined') {
-        return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
+    const { publicId } = await req.json();
+    if (!publicId) {
+      return NextResponse.json({ error: 'publicId is required' }, { status: 400 });
     }
-    const contextStr = `${key}=${value.toString()}`;
-    await cloudinary.uploader.add_context(contextStr, [publicId]);
-    return NextResponse.json({ success: true });
+    
+    await cloudinary.uploader.destroy(publicId);
+    
+    await clearPhotoCache();
+
+    return NextResponse.json({ message: 'Photo deleted' });
   } catch (error) {
-    console.error('Context update error:', error);
-    return NextResponse.json({ error: 'Context update failed' }, { status: 500 });
+    console.error('Delete error:', error);
+    return NextResponse.json({ error: 'Delete failed' }, { status: 500 });
   }
 }
 
-// DELETE a photo
-export async function DELETE(req: Request) {
-    try {
-        const { publicId } = await req.json();
-        if (!publicId) {
-            return NextResponse.json({ error: 'Missing publicId' }, { status: 400 });
-        }
-        await cloudinary.uploader.destroy(publicId);
-        return NextResponse.json({ success: true });
-    } catch (error) {
-        console.error('Delete error:', error);
-        return NextResponse.json({ error: 'Delete failed' }, { status: 500 });
+// PUT to update a photo's context by public_id
+export async function PUT(req: Request) {
+  try {
+    const { publicId, key, value } = await req.json();
+    if (!publicId || !key) {
+      return NextResponse.json({ error: 'publicId and key are required' }, { status: 400 });
     }
+
+    // Use explicit update to set context
+    const result = await cloudinary.uploader.explicit(publicId, {
+      type: 'upload',
+      context: `${key}=${value}`,
+    });
+
+    await clearPhotoCache();
+
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error('Update error:', error);
+    return NextResponse.json({ error: 'Update failed' }, { status: 500 });
+  }
 }

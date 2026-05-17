@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import type { Photo } from "@/lib/supabase";
+import type { Photo } from "@/types";
 
 const FALLBACK_IMAGES = [
   "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
@@ -20,7 +20,7 @@ interface HeroSliderProps {
 export default function HeroSlider({ photos = [] }: HeroSliderProps) {
   const heroImages =
     photos.length > 0
-      ? photos.slice(0, 6).map((p) => p.image_url)
+      ? photos.slice(0, 6).map((p) => p.secure_url)
       : FALLBACK_IMAGES;
 
   const [index, setIndex] = useState(0);
