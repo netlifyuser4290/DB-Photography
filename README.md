@@ -47,8 +47,8 @@ copy .env.local.example .env.local
 Edit `.env.local`:
 
 ```
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
-NEXT_PUBLIC_CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 
 # Admin login (default: dhruv / dbphotography)
@@ -76,8 +76,8 @@ Open [http://localhost:3000](http://localhost:3000) for the gallery. For the adm
 3. Click **Add new site** → **Import an existing project** → choose your repo.
 
 4. Netlify auto-detects Next.js. Add these **Environment variables** before deploying:
-   - `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`
-   - `NEXT_PUBLIC_CLOUDINARY_API_KEY`
+   - `CLOUDINARY_CLOUD_NAME`
+   - `CLOUDINARY_API_KEY`
    - `CLOUDINARY_API_SECRET`
    - `ADMIN_USER` (default: dhruv)
    - `ADMIN_PASSWORD` (default: dbphotography)
