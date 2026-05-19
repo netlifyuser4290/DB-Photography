@@ -5,6 +5,7 @@ import HeroSlider from "@/components/HeroSlider";
 import HomeGallery from "@/components/HomeGallery";
 import Team from "@/components/Team";
 import Preloader from "@/components/Preloader";
+import Image from 'next/image';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -56,9 +57,11 @@ export default async function HomePage() {
             {/* Image Column */}
             <div className="md:w-1/2">
               <div className="relative group">
-                <img
+                <Image
                   src={homePagePhotos[0]?.secure_url}
                   alt="DB Photography session"
+                  width={800}
+                  height={600}
                   className="rounded-xl shadow-2xl w-full h-auto transform group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-black bg-opacity-20 rounded-xl group-hover:bg-opacity-10 transition-opacity duration-300"></div>
@@ -71,7 +74,7 @@ export default async function HomePage() {
                 Where Moments <span className="text-accent">Become Art</span>
               </h2>
               <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                We believe that photography is more than just capturing an image; it's about preserving an emotion, a fleeting glance, a timeless story. At DB Photography, we are artisans of light and shadow, dedicated to transforming your most cherished moments into exquisite, heirloom-quality art.
+                We believe that photography is more than just capturing an image; it&apos;s about preserving an emotion, a fleeting glance, a timeless story. At DB Photography, we are artisans of light and shadow, dedicated to transforming your most cherished moments into exquisite, heirloom-quality art.
               </p>
               <p className="text-lg text-gray-600 mb-8 leading-relaxed">
                 Our approach is a symphony of creative vision and technical precision. We meticulously craft each composition, ensuring every photograph is not just a picture, but a masterpiece of personal storytelling.

@@ -1,32 +1,32 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Image from "next/image";
-import type { Photo } from "@/lib/supabase";
-import Lightbox from "./Lightbox";
+import { useState } from 'react';
+import Image from 'next/image';
+import type { Photo } from '@/lib/photo';
+import Lightbox from './Lightbox';
 
 interface PhotoGridProps {
   photos: Photo[];
 }
 
 const CATEGORIES = [
-  "all",
-  "portrait",
-  "landscape",
-  "street",
-  "events",
-  "wedding",
-  "general",
+  'all',
+  'portrait',
+  'landscape',
+  'street',
+  'events',
+  'wedding',
+  'general',
 ];
 
 export default function PhotoGrid({ photos }: PhotoGridProps) {
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState('all');
   const [lightboxPhoto, setLightboxPhoto] = useState<Photo | null>(null);
 
   const filtered =
-    filter === "all"
+    filter === 'all'
       ? photos
-      : photos.filter((p) => p.category?.toLowerCase() === filter);
+      : photos.filter((p) => (p.context?.custom?.category || 'general').toLowerCase() === filter);
 
   if (photos.length === 0) {
     return (
@@ -36,8 +36,7 @@ export default function PhotoGrid({ photos }: PhotoGridProps) {
             className="w-10 h-10 text-warm/30"
             fill="none"
             stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+            viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -62,11 +61,10 @@ export default function PhotoGrid({ photos }: PhotoGridProps) {
             onClick={() => setFilter(cat)}
             className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
               filter === cat
-                ? "bg-accent text-charcoal"
-                : "bg-warm/5 text-warm/70 hover:bg-warm/10 hover:text-warm"
-            }`}
-          >
-            {cat === "all" ? "All" : cat.charAt(0).toUpperCase() + cat.slice(1)}
+                ? 'bg-accent text-charcoal'
+                : 'bg-warm/5 text-warm/70 hover:bg-warm/10 hover:text-warm'
+            }`}>
+            {cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}
           </button>
         ))}
       </div>
@@ -75,31 +73,25 @@ export default function PhotoGrid({ photos }: PhotoGridProps) {
       <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-5 space-y-5">
         {filtered.map((photo, i) => (
           <div
-            key={photo.id}
+            key={photo.public_id}
             className="gallery-tile break-inside-avoid mb-5 animate-fade-in opacity-0"
-            style={{ animationDelay: `${Math.min(i * 0.05, 0.5)}s` }}
-          >
+            style={{ animationDelay: `${Math.min(i * 0.05, 0.5)}s` }}>
             <button
               onClick={() => setLightboxPhoto(photo)}
-              className="block w-full text-left group"
-            >
+              className="block w-full text-left group">
               <div className="relative overflow-hidden rounded-sm bg-charcoal/50 aspect-[4/5] sm:aspect-[3/4]">
                 <Image
-                  src={photo.image_url}
-                  alt={photo.title || "Photo"}
+                  src={photo.secure_url}
+                  alt={photo.context?.custom?.alt || 'Photo'}
                   fill
                   className="object-cover"
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-5">
                   <span className="font-display text-lg text-white font-medium">
-                    {photo.title || "Untitled"}
+                    {photo.context?.custom?.caption || 'Untitled'}
                   </span>
-                  {photo.description && (
-                    <span className="text-white/80 text-sm mt-0.5 line-clamp-2">
-                      {photo.description}
-                    </span>
-                  )}
+                  
                   <span className="text-accent/90 text-xs mt-2 uppercase tracking-wider">
                     View
                   </span>

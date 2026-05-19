@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import type { Photo } from "@/types";
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import type { Photo } from '@/lib/photo';
 
 const FALLBACK_IMAGES = [
-  "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-  "https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-  "https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-  "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-  "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-  "https://images.unsplash.com/photo-1478146896981-b80fe463b330?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+  'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+  'https://images.unsplash.com/photo-1519741497674-611481863552?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+  'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+  'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+  'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+  'https://images.unsplash.com/photo-1478146896981-b80fe463b330?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
 ];
 
 interface HeroSliderProps {
@@ -46,7 +46,7 @@ export default function HeroSlider({ photos = [] }: HeroSliderProps) {
       className="h-screen flex items-center justify-center text-white bg-cover bg-center bg-no-repeat relative"
       style={{
         backgroundImage: `url('${heroImages[index]}')`,
-        backgroundAttachment: "fixed",
+        backgroundAttachment: 'fixed',
       }}
     >
       <div className="absolute inset-0 bg-black/40 z-[1]" />
@@ -65,7 +65,7 @@ export default function HeroSlider({ photos = [] }: HeroSliderProps) {
           </h1>
           <p
             className="text-xl mb-10 max-w-[600px] mx-auto animate-fade-in-up text-white"
-            style={{ animationDelay: "0.2s", animationFillMode: "both" }}
+            style={{ animationDelay: '0.2s', animationFillMode: 'both' }}
           >
             Professional photography for weddings, portraits, events & commercial projects. Your
             story, beautifully told.
@@ -73,7 +73,7 @@ export default function HeroSlider({ photos = [] }: HeroSliderProps) {
           <Link
             href="#gallery"
             className="inline-block bg-gradient-to-r from-accent to-accent-dark text-white py-4 px-12 rounded-[50px] font-semibold text-lg transition-all hover:-translate-y-1 hover:shadow-lg hover:shadow-accent/40 animate-fade-in-up"
-            style={{ animationDelay: "0.4s", animationFillMode: "both" }}
+            style={{ animationDelay: '0.4s', animationFillMode: 'both' }}
           >
             View My Work
           </Link>

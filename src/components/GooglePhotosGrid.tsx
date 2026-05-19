@@ -1,23 +1,29 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import type { Photo } from "@/lib/supabase";
-import Lightbox from "./Lightbox";
-import "./GooglePhotosGrid.css";
+import { useState } from 'react';
+import Lightbox from './Lightbox';
+import './GooglePhotosGrid.css';
+import Image from 'next/image';
+import { Photo } from '@/lib/photo';
 
 interface GooglePhotosGridProps {
   photos: Photo[];
   categoryFilter?: string;
 }
 
-const CATEGORIES = ["all", "wedding", "portrait", "landscape", "street", "events", "general"];
+const CATEGORIES = ['all', 'wedding', 'portrait', 'landscape', 'street', 'events', 'general'];
 
 export default function GooglePhotosGrid({ photos, categoryFilter }: GooglePhotosGridProps) {
-  const [filter, setFilter] = useState(categoryFilter || "all");
+  const [filter, setFilter] = useState(categoryFilter || 'all');
   const [lightboxPhoto, setLightboxPhoto] = useState<Photo | null>(null);
 
   const filtered =
-    filter === "all" ? photos : photos.filter((p) => (p.category || "general").toLowerCase() === filter);
+    filter === 'all'
+      ? photos
+      : photos.filter(
+          (p) =>
+            (p.context?.custom?.category || 'general').toLowerCase() === filter
+        );
 
   if (photos.length === 0) {
     return (
@@ -36,17 +42,22 @@ export default function GooglePhotosGrid({ photos, categoryFilter }: GooglePhoto
             type="button"
             onClick={() => setFilter(cat)}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-              filter === cat ? "bg-accent text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            {cat === "all" ? "All" : cat.charAt(0).toUpperCase() + cat.slice(1)}
+              filter === cat
+                ? 'bg-accent text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}>
+            {cat === 'all' ? 'All' : cat.charAt(0).toUpperCase() + cat.slice(1)}
           </button>
         ))}
       </div>
 
       <div className="google-photos-grid">
         {filtered.map((photo) => (
-          <PhotoTile key={photo.id} photo={photo} onClick={() => setLightboxPhoto(photo)} />
+          <PhotoTile
+            key={photo.public_id}
+            photo={photo}
+            onClick={() => setLightboxPhoto(photo)}
+          />
         ))}
       </div>
 
@@ -63,26 +74,26 @@ export default function GooglePhotosGrid({ photos, categoryFilter }: GooglePhoto
 }
 
 function PhotoTile({ photo, onClick }: { photo: Photo; onClick: () => void }) {
-  const [span, setSpan] = useState<"landscape" | "portrait-tall" | null>(null);
+  const [span, setSpan] = useState<'landscape' | 'portrait-tall' | null>(null);
 
   function handleLoad(e: React.SyntheticEvent<HTMLImageElement>) {
     const img = e.currentTarget;
     const aspect = img.naturalWidth / img.naturalHeight;
-    if (aspect > 1.2) setSpan("landscape");
-    else if (aspect < 0.7) setSpan("portrait-tall");
+    if (aspect > 1.2) setSpan('landscape');
+    else if (aspect < 0.7) setSpan('portrait-tall');
   }
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`google-photo-tile ${span || ""}`}
-    >
-      <img
-        src={photo.image_url}
-        alt={photo.title || "Photo"}
+      className={`google-photo-tile ${span || ''}`}>
+      <Image
+        src={photo.secure_url}
+        alt={photo.context?.custom?.alt || 'Photo'}
+        width={500}
+        height={500}
         className="w-full h-full object-cover block"
-        loading="lazy"
         onLoad={handleLoad}
       />
     </button>

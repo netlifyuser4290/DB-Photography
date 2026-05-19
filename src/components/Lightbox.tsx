@@ -2,17 +2,7 @@
 
 import { useEffect } from "react";
 import Image from "next/image";
-
-// Define the Photo type based on Cloudinary's API response
-export interface Photo {
-  secure_url: string;
-  context?: {
-    custom?: {
-      alt?: string;
-      caption?: string;
-    };
-  };
-}
+import { Photo } from '@/lib/photo';
 
 interface LightboxProps {
   photo: Photo;
@@ -22,7 +12,7 @@ interface LightboxProps {
 }
 
 export default function Lightbox({ photo, photos, onClose, onNavigate }: LightboxProps) {
-  const idx = photos.findIndex((p) => p.secure_url === photo.secure_url);
+  const idx = photos.findIndex((p) => p.public_id === photo.public_id);
   const prev = idx > 0 ? photos[idx - 1] : null;
   const next = idx >= 0 && idx < photos.length - 1 ? photos[idx + 1] : null;
 

@@ -1,4 +1,6 @@
 
+import Image from 'next/image';
+
 const teamMembers = [
   {
     name: 'Dhruv Badlawala',
@@ -34,9 +36,11 @@ export default function Team() {
           {teamMembers.map((member, index) => (
             <div key={index} className="group relative text-center">
               <div className="relative overflow-hidden rounded-xl">
-                <img
+                <Image
                   src={member.image}
                   alt={member.name}
+                  width={500}
+                  height={500}
                   className="w-full h-auto object-cover rounded-xl transform group-hover:scale-110 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>

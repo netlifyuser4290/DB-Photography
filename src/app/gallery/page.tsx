@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Header from "@/components/Header";
+import Image from 'next/image';
 
 // Define the Photo type based on the expected API response
 interface Photo {
@@ -57,9 +58,11 @@ export default function GalleryPage() {
           <div className="columns-1 sm:columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
             {photos.map((photo: Photo) => (
               <div key={photo.public_id} className="break-inside-avoid">
-                <img
+                <Image
                   src={photo.secure_url}
                   alt={photo.context?.custom?.alt || "DB-Studio photo"}
+                  width={500}
+                  height={500}
                   className="w-full h-auto object-cover rounded-lg shadow-lg"
                 />
               </div>
