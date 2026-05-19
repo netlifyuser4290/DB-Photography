@@ -9,20 +9,35 @@ cloudinary.config({
 });
 
 export async function POST(req: Request) {
-  const { file, title, description } = await req.json();
+  const { filename, contentType, size } = await req.json();
+
+  if (!filename || !contentType || !size) {
+    return NextResponse.json({ error: "Missing required parameters" }, { status: 400 });
+  }
+
+  const timestamp = Math.round(new Date().getTime() / 1000);
+  const public_id = `db-studio/${filename}`;
 
   try {
-    const { public_id, secure_url } = await cloudinary.uploader.upload(file, {
-      folder: 'db-studio',
-      context: {
-        alt: title,
-        caption: description,
+    const signature = cloudinary.utils.api_sign_request(
+      {
+        timestamp,
+        public_id,
+        folder: 'db-studio',
+        tags: 'db-studio-gallery', // Add a tag for easy filtering
       },
-    });
+      process.env.CLOUDINARY_API_SECRET as string
+    );
 
-    return NextResponse.json({ public_id, secure_url });
+    return NextResponse.json({
+      timestamp,
+      signature,
+      public_id,
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+      apiKey: process.env.CLOUDINARY_API_KEY,
+    });
   } catch (error) {
-    console.error('Upload error:', error);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    console.error("Error signing upload request:", error);
+    return NextResponse.json({ error: "Failed to sign upload request" }, { status: 500 });
   }
 }

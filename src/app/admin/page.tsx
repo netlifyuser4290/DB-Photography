@@ -34,7 +34,7 @@ export default function AdminPage() {
   async function fetchPhotos() {
     setLoading(true);
     try {
-      const res = await fetch("/api/photos"); // Switched to a general photos API
+      const res = await fetch("/api/photos");
       if (!res.ok) throw new Error("Failed to fetch");
       const { resources } = await res.json();
       setPhotos(resources);
@@ -67,33 +67,59 @@ export default function AdminPage() {
     setUploadProgress({ current: 0, total: imageFiles.length });
 
     const uploadPromises = imageFiles.map((file) => {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onloadend = async () => {
-          try {
-            const res = await fetch("/api/photos/upload", { // New upload endpoint
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                file: reader.result,
-                title: getTitleForFile(file),
-                description,
-              }),
-            });
+      return new Promise(async (resolve, reject) => {
+        // Step 1: Get the signed URL from our server
+        const signRes = await fetch("/api/photos/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            filename: file.name,
+            contentType: file.type,
+            size: file.size,
+          }),
+        });
 
-            if (res.ok) {
-              setFileUploadProgress((prev) => ({ ...prev, [file.name]: 100 }));
-              setUploadProgress((prev) => ({ ...prev, current: prev.current + 1 }));
-              resolve(res);
-            } else {
-              reject(new Error("Upload failed"));
-            }
-          } catch (error) {
-            reject(error);
+        if (!signRes.ok) {
+          return reject(new Error("Failed to get signed URL."));
+        }
+
+        const { timestamp, signature, public_id, cloudName, apiKey } = await signRes.json();
+
+        // Step 2: Upload the file directly to Cloudinary
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("api_key", apiKey);
+        formData.append("timestamp", timestamp);
+        formData.append("signature", signature);
+        formData.append("public_id", public_id);
+        formData.append("folder", "db-studio"); // Optional: specify a folder
+
+        // Set context metadata
+        const context = `alt=${getTitleForFile(file)}|caption=${description}`;
+        formData.append("context", context);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, true);
+
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            const percent = Math.round((event.loaded / event.total) * 100);
+            setFileUploadProgress((prev) => ({ ...prev, [file.name]: percent }));
           }
         };
-        reader.onerror = (error) => reject(error);
+
+        xhr.onloadend = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            setUploadProgress((prev) => ({ ...prev, current: prev.current + 1 }));
+            resolve(xhr.response);
+          } else {
+            reject(new Error(xhr.statusText));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error("Network error during upload."));
+
+        xhr.send(formData);
       });
     });
 
@@ -107,7 +133,7 @@ export default function AdminPage() {
       setTitle("");
       setDescription("");
       setFiles([]);
-      fetchPhotos(); // Refresh
+      fetchPhotos(); // Refresh the gallery
     }
   };
 
@@ -131,8 +157,8 @@ export default function AdminPage() {
     if (!confirm("Remove this photo from the portfolio?")) return;
 
     try {
-      await fetch("/api/photos/delete", { // New delete endpoint
-        method: "POST", // Using POST for this endpoint
+      await fetch("/api/photos/delete", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ publicId }),
       });
@@ -145,10 +171,10 @@ export default function AdminPage() {
 
   async function handleToggle(publicId: string, key: string, value: boolean) {
     try {
-      await fetch('/api/photos/update', { // New update endpoint
-        method: 'POST', // Using POST for this endpoint
+      await fetch('/api/photos/update', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ publicId, key, value: !value }), // Toggle the value
+        body: JSON.stringify({ publicId, key, value: !value }),
       });
       fetchPhotos();
     } catch (err) {
