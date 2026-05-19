@@ -1,6 +1,6 @@
 # Photographer Portfolio Website
 
-A clean, modern portfolio website for photographers with an admin panel to add and remove photos. Built with **Next.js**, **Tailwind CSS**, and **Supabase** — designed for **free hosting**.
+A clean, modern portfolio website for photographers with an admin panel to add and remove photos. Built with **Next.js**, **Tailwind CSS**, and **Cloudinary** — designed for **free hosting**.
 
 ## Features
 
@@ -9,7 +9,7 @@ A clean, modern portfolio website for photographers with an admin panel to add a
 - **Remove photos** – Delete photos from the portfolio
 - **Admin panel** – Protected with login (username/password)
 - **Content protection** – Discourages screenshots, right-click, and drag on images
-- **Free hosting** – Deploy on Netlify + Supabase (both free tiers)
+- **Free hosting** – Deploy on Netlify + Cloudinary (both free tiers)
 
 ---
 
@@ -31,30 +31,10 @@ cd "d:\db-photography\commit with dhruvil\dbstudio"
 npm install
 ```
 
-### 4. Set up Supabase (Free)
+### 4. Set up Cloudinary (Free)
 
-1. Go to [supabase.com](https://supabase.com) and create a free account.
-2. Create a new project (choose a region, set a password).
-3. In **Project Settings → API**, copy:
-   - Project URL
-   - anon/public key
-
-4. Run the SQL in `supabase/schema.sql`:
-   - Open **SQL Editor** in the Supabase dashboard
-   - Paste the contents of `supabase/schema.sql`
-   - Run the script
-
-5. Create a Storage bucket:
-   - Go to **Storage** in the sidebar
-   - Click **New bucket**
-   - Name: `photos`
-   - Make it **Public**
-   - Create the bucket
-
-6. Add Storage policies (Storage → photos → Policies):
-   - **Allow public read**: `SELECT` for everyone
-   - **Allow upload**: `INSERT` (you can restrict with auth later)
-   - **Allow delete**: `DELETE` for your use case
+1. Go to [cloudinary.com](https://cloudinary.com) and create a free account.
+2. From your dashboard, you will need your **Cloud Name**, **API Key**, and **API Secret**.
 
 ### 5. Configure environment
 
@@ -67,8 +47,9 @@ copy .env.local.example .env.local
 Edit `.env.local`:
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
+NEXT_PUBLIC_CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 
 # Admin login (default: dhruv / dbphotography)
 ADMIN_USER=dhruv
@@ -95,8 +76,9 @@ Open [http://localhost:3000](http://localhost:3000) for the gallery. For the adm
 3. Click **Add new site** → **Import an existing project** → choose your repo.
 
 4. Netlify auto-detects Next.js. Add these **Environment variables** before deploying:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`
+   - `NEXT_PUBLIC_CLOUDINARY_API_KEY`
+   - `CLOUDINARY_API_SECRET`
    - `ADMIN_USER` (default: dhruv)
    - `ADMIN_PASSWORD` (default: dbphotography)
    - `ADMIN_SESSION_SECRET` (use a strong random string in production)
@@ -110,7 +92,7 @@ Open [http://localhost:3000](http://localhost:3000) for the gallery. For the adm
 | Service   | Free Tier           | Usage                          |
 |----------|----------------------|--------------------------------|
 | Netlify  | 100GB bandwidth      | Hosts the Next.js app          |
-| Supabase | 1GB storage, 500MB DB| Database + image storage       |
+| Cloudinary | Generous free tier   | Image hosting and management |
 
 ---
 
@@ -122,9 +104,7 @@ Open [http://localhost:3000](http://localhost:3000) for the gallery. For the adm
 │   │   ├── page.tsx   # Public gallery
 │   │   └── admin/     # Admin panel
 │   ├── components/    # Reusable components
-│   └── lib/           # Supabase client
-├── supabase/
-│   └── schema.sql     # Database schema
+│   └── lib/           # Cloudinary client
 └── README.md
 ```
 

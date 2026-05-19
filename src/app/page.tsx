@@ -3,6 +3,8 @@ import { v2 as cloudinary } from 'cloudinary';
 import Header from "@/components/Header";
 import HeroSlider from "@/components/HeroSlider";
 import HomeGallery from "@/components/HomeGallery";
+import Team from "@/components/Team";
+import Preloader from "@/components/Preloader";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -43,73 +45,51 @@ export default async function HomePage() {
 
   return (
     <>
+      <Preloader />
       <Header />
 
       <HeroSlider photos={homePagePhotos} />
 
-      {/* About Section */}
-      <section id='about' className='py-[120px] bg-gradient-to-br from-gray-50 to-gray-100 text-center'>
-        <div className='max-w-[1200px] mx-auto px-8'>
-          <h2 className='font-display text-4xl text-charcoal mb-16 relative'>
-            About DB Photography
-            <span className='block w-[60px] h-[3px] bg-accent mx-auto mt-4' />
-          </h2>
-          <div className='max-w-[900px] mx-auto'>
-            <p className='text-xl text-gray-600 mb-8 leading-relaxed'>
-              With years of professional experience, I specialize in creating stunning images that
-              capture the true essence of your most cherished moments. Every photograph tells a
-              story.
-            </p>
-            <p className='text-xl text-gray-600 leading-relaxed'>
-              From intimate weddings to corporate events, I bring passion, creativity, and technical
-              expertise to every shoot.
-            </p>
+      <section className="bg-gray-50 py-24">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-12">
+            {/* Image Column */}
+            <div className="md:w-1/2">
+              <div className="relative group">
+                <img
+                  src={homePagePhotos[0]?.secure_url}
+                  alt="DB Photography session"
+                  className="rounded-xl shadow-2xl w-full h-auto transform group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-black bg-opacity-20 rounded-xl group-hover:bg-opacity-10 transition-opacity duration-300"></div>
+              </div>
+            </div>
+
+            {/* Text Column */}
+            <div className="md:w-1/2 text-center md:text-left">
+              <h2 className="text-4xl md:text-5xl font-display text-gray-800 mb-6 leading-tight">
+                Where Moments <span className="text-accent">Become Art</span>
+              </h2>
+              <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                We believe that photography is more than just capturing an image; it's about preserving an emotion, a fleeting glance, a timeless story. At DB Photography, we are artisans of light and shadow, dedicated to transforming your most cherished moments into exquisite, heirloom-quality art.
+              </p>
+              <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+                Our approach is a symphony of creative vision and technical precision. We meticulously craft each composition, ensuring every photograph is not just a picture, but a masterpiece of personal storytelling.
+              </p>
+              <a
+                href="/gallery"
+                className="inline-block bg-accent text-white py-3 px-8 rounded-full font-semibold text-lg hover:bg-accent-dark hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
+              >
+                Discover Our Portfolio
+              </a>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Gallery Section */}
       <HomeGallery photos={recentWorkPhotos} />
 
-      {/* Services Section */}
-      <section id='services' className='py-[120px] bg-gray-50'>
-        <div className='max-w-[1200px] mx-auto px-8'>
-          <h2 className='font-display text-4xl text-center text-charcoal mb-16 relative'>
-            Photography Services
-            <span className='block w-[60px] h-[3px] bg-accent mx-auto mt-4' />
-          </h2>
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 mt-12'>
-            <div className='bg-white p-10 rounded-[20px] text-center shadow-[0_15px_40px_rgba(0,0,0,0.1)] transition-all duration-400 hover:-translate-y-4 hover:shadow-[0_25px_60px_rgba(0,0,0,0.2)] border-t-4 border-transparent hover:border-accent'>
-              <span className='text-5xl text-accent mb-6 block'>❤</span>
-              <h3 className='font-display text-2xl mb-4 text-charcoal'>Wedding Photography</h3>
-              <p className='text-gray-600'>
-                Capturing the magic of your special day with timeless wedding photography.
-              </p>
-            </div>
-            <div className='bg-white p-10 rounded-[20px] text-center shadow-[0_15px_40px_rgba(0,0,0,0.1)] transition-all duration-400 hover:-translate-y-4 hover:shadow-[0_25px_60px_rgba(0,0,0,0.2)] border-t-4 border-transparent hover:border-accent'>
-              <span className='text-5xl text-accent mb-6 block'>👤</span>
-              <h3 className='font-display text-2xl mb-4 text-charcoal'>Portrait Photography</h3>
-              <p className='text-gray-600'>
-                Professional portraits that showcase your personality and style.
-              </p>
-            </div>
-            <div className='bg-white p-10 rounded-[20px] text-center shadow-[0_15px_40px_rgba(0,0,0,0.1)] transition-all duration-400 hover:-translate-y-4 hover:shadow-[0_25px_60px_rgba(0,0,0,0.2)] border-t-4 border-transparent hover:border-accent'>
-              <span className='text-5xl text-accent mb-6 block'>💼</span>
-              <h3 className='font-display text-2xl mb-4 text-charcoal'>Event Photography</h3>
-              <p className='text-gray-600'>
-                Documenting corporate events, conferences, and social gatherings.
-              </p>
-            </div>
-            <div className='bg-white p-10 rounded-[20px] text-center shadow-[0_15px_40px_rgba(0,0,0,0.1)] transition-all duration-400 hover:-translate-y-4 hover:shadow-[0_25px_60px_rgba(0,0,0,0.2)] border-t-4 border-transparent hover:border-accent'>
-              <span className='text-5xl text-accent mb-6 block'>📦</span>
-              <h3 className='font-display text-2xl mb-4 text-charcoal'>Product Photography</h3>
-              <p className='text-gray-600'>
-                High-quality product images that make your brand stand out.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <Team />
 
       {/* Contact Section */}
       <section id='contact' className='py-[120px] bg-gradient-to-br from-charcoal to-[#1a252f] text-white text-center'>

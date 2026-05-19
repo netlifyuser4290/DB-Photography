@@ -11,6 +11,7 @@ const config: Config = {
       fontFamily: {
         display: ["var(--font-playfair)", "Georgia", "serif"],
         body: ["var(--font-inter)", "system-ui", "sans-serif"],
+        signature: ["var(--font-great-vibes)", "cursive"],
       },
       colors: {
         charcoal: "#2c3e50",

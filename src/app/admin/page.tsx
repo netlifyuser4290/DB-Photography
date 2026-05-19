@@ -1,11 +1,24 @@
-
-"use client";
+'use client';
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import type { Photo } from "@/types";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
+// Define the Photo type based on Cloudinary's API response
+export interface Photo {
+  public_id: string;
+  secure_url: string;
+  context?: {
+    custom?: {
+      alt?: string;
+      caption?: string;
+      show_on_home?: string;
+      show_in_recent?: string;
+    };
+  };
+  created_at: string;
+}
 
 export default function AdminPage() {
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -14,7 +27,6 @@ export default function AdminPage() {
   const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("general");
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [fileUploadProgress, setFileUploadProgress] = useState<{ [key: string]: number }>({});
@@ -22,7 +34,7 @@ export default function AdminPage() {
   async function fetchPhotos() {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/photos");
+      const res = await fetch("/api/photos"); // Switched to a general photos API
       if (!res.ok) throw new Error("Failed to fetch");
       const { resources } = await res.json();
       setPhotos(resources);
@@ -58,38 +70,28 @@ export default function AdminPage() {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
-        reader.onloadend = () => {
-          const xhr = new XMLHttpRequest();
-          xhr.open("POST", "/api/admin/photos", true);
-          xhr.setRequestHeader("Content-Type", "application/json");
+        reader.onloadend = async () => {
+          try {
+            const res = await fetch("/api/photos/upload", { // New upload endpoint
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                file: reader.result,
+                title: getTitleForFile(file),
+                description,
+              }),
+            });
 
-          xhr.upload.onprogress = (event) => {
-            if (event.lengthComputable) {
-              const percentComplete = (event.loaded / event.total) * 100;
-              setFileUploadProgress((prev) => ({ ...prev, [file.name]: percentComplete }));
-            }
-          };
-
-          xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
+            if (res.ok) {
               setFileUploadProgress((prev) => ({ ...prev, [file.name]: 100 }));
               setUploadProgress((prev) => ({ ...prev, current: prev.current + 1 }));
-              resolve(xhr.response);
+              resolve(res);
             } else {
-              reject(new Error(xhr.statusText));
+              reject(new Error("Upload failed"));
             }
-          };
-
-          xhr.onerror = () => reject(new Error(xhr.statusText));
-
-          const body = JSON.stringify({
-            file: reader.result,
-            title: getTitleForFile(file),
-            description,
-            category,
-          });
-
-          xhr.send(body);
+          } catch (error) {
+            reject(error);
+          }
         };
         reader.onerror = (error) => reject(error);
       });
@@ -104,7 +106,6 @@ export default function AdminPage() {
       setUploading(false);
       setTitle("");
       setDescription("");
-      setCategory("general");
       setFiles([]);
       fetchPhotos(); // Refresh
     }
@@ -130,8 +131,8 @@ export default function AdminPage() {
     if (!confirm("Remove this photo from the portfolio?")) return;
 
     try {
-      await fetch("/api/admin/photos", {
-        method: "DELETE",
+      await fetch("/api/photos/delete", { // New delete endpoint
+        method: "POST", // Using POST for this endpoint
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ publicId }),
       });
@@ -142,13 +143,12 @@ export default function AdminPage() {
     }
   }
 
-  async function handleToggle(publicId: string, context: any, key: string) {
+  async function handleToggle(publicId: string, key: string, value: boolean) {
     try {
-      const newValue = !(context?.[key] === 'true');
-      await fetch('/api/admin/photos', {
-        method: 'PUT',
+      await fetch('/api/photos/update', { // New update endpoint
+        method: 'POST', // Using POST for this endpoint
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ publicId, key, value: newValue }),
+        body: JSON.stringify({ publicId, key, value: !value }), // Toggle the value
       });
       fetchPhotos();
     } catch (err) {
@@ -186,7 +186,7 @@ export default function AdminPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-12">
-        {/* Add Photos - Bulk upload */}
+        {/* Add Photos Section */}
         <section className="mb-16 p-8 rounded-2xl bg-white/5 border border-white/10">
           <h2 className="font-display text-xl font-medium mb-6">Add Photos</h2>
           <form onSubmit={handleUpload} className="space-y-6">
@@ -202,34 +202,18 @@ export default function AdminPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm text-white/70 mb-2">Category</label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-white/10 text-white focus:border-accent focus:outline-none transition-all"
-                >
-                  <option value="general">General</option>
-                  <option value="portrait">Portrait</option>
-                  <option value="landscape">Landscape</option>
-                  <option value="street">Street</option>
-                  <option value="events">Events</option>
-                  <option value="wedding">Wedding</option>
-                </select>
+                <label className="block text-sm text-white/70 mb-2">Description (optional)</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Applied to all selected photos"
+                  rows={2}
+                  className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-white/10 text-white placeholder-white/40 focus:border-accent focus:outline-none resize-none transition-all"
+                />
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm text-white/70 mb-2">Description (optional)</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Applied to all selected photos"
-                rows={2}
-                className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-white/10 text-white placeholder-white/40 focus:border-accent focus:outline-none resize-none transition-all"
-              />
-            </div>
-
-            {/* Drag & drop + multi-file */}
+            {/* Drag & drop file input */}
             <div>
               <label className="block text-sm text-white/70 mb-2">Photos *</label>
               <div
@@ -302,12 +286,12 @@ export default function AdminPage() {
                           </button>
                         </div>
                         {uploading && (
-                           <div className="relative w-full h-2 mt-2 bg-gray-700 rounded-full">
-                           <div
-                             className="absolute top-0 left-0 h-full bg-accent rounded-full"
-                             style={{ width: `${fileUploadProgress[f.name] || 0}%` }}
-                           />
-                         </div>
+                          <div className="relative w-full h-2 mt-2 bg-gray-700 rounded-full">
+                            <div
+                              className="absolute top-0 left-0 h-full bg-accent rounded-full"
+                              style={{ width: `${fileUploadProgress[f.name] || 0}%` }}
+                            />
+                          </div>
                         )}
                       </div>
                     ))}
@@ -328,7 +312,7 @@ export default function AdminPage() {
           </form>
         </section>
 
-        {/* Photo list */}
+        {/* Photo List Section */}
         <section>
           <h2 className="font-display text-xl font-medium mb-6">
             Your Photos <span className="text-white/50 font-normal">({photos.length})</span>
@@ -347,20 +331,20 @@ export default function AdminPage() {
                   <div className="flex items-start gap-4">
                     <Image
                       src={photo.secure_url}
-                      alt={photo.context?.title || "Photo"}
+                      alt={photo.context?.custom?.alt || "Photo"}
                       width={80}
                       height={80}
                       className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{photo.context?.title || "Untitled"}</p>
+                      <p className="font-medium truncate">{photo.context?.custom?.caption || "Untitled"}</p>
                       <p className="text-sm text-white/60 truncate">
-                        {photo.context?.category} • {new Date(photo.created_at).toLocaleDateString()}
+                        {new Date(photo.created_at).toLocaleDateString()}
                       </p>
-                      {photo.context?.show_on_home === 'true' && (
+                      {photo.context?.custom?.show_on_home === 'true' && (
                         <p className="text-sm text-accent font-medium">Shown on Home Page</p>
                       )}
-                      {photo.context?.show_in_recent === 'true' && (
+                      {photo.context?.custom?.show_in_recent === 'true' && (
                         <p className="text-sm text-accent font-medium">Shown in Recent Work</p>
                       )}
                     </div>
@@ -369,8 +353,8 @@ export default function AdminPage() {
                     <label className="flex items-center gap-2 text-sm">
                       <input
                         type="checkbox"
-                        checked={photo.context?.show_on_home === 'true'}
-                        onChange={() => handleToggle(photo.public_id, photo.context, 'show_on_home')}
+                        checked={photo.context?.custom?.show_on_home === 'true'}
+                        onChange={() => handleToggle(photo.public_id, 'show_on_home', photo.context?.custom?.show_on_home === 'true')}
                         className="rounded border-white/20 bg-gray-800 text-accent focus:ring-accent"
                       />
                       Home
@@ -378,8 +362,8 @@ export default function AdminPage() {
                     <label className="flex items-center gap-2 text-sm">
                       <input
                         type="checkbox"
-                        checked={photo.context?.show_in_recent === 'true'}
-                        onChange={() => handleToggle(photo.public_id, photo.context, 'show_in_recent')}
+                        checked={photo.context?.custom?.show_in_recent === 'true'}
+                        onChange={() => handleToggle(photo.public_id, 'show_in_recent', photo.context?.custom?.show_in_recent === 'true')}
                         className="rounded border-white/20 bg-gray-800 text-accent focus:ring-accent"
                       />
                       Recent Work

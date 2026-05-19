@@ -1,8 +1,18 @@
-"use client";
+'use client';
 
 import { useEffect } from "react";
 import Image from "next/image";
-import type { Photo } from "@/lib/supabase";
+
+// Define the Photo type based on Cloudinary's API response
+export interface Photo {
+  secure_url: string;
+  context?: {
+    custom?: {
+      alt?: string;
+      caption?: string;
+    };
+  };
+}
 
 interface LightboxProps {
   photo: Photo;
@@ -12,7 +22,7 @@ interface LightboxProps {
 }
 
 export default function Lightbox({ photo, photos, onClose, onNavigate }: LightboxProps) {
-  const idx = photos.findIndex((p) => p.id === photo.id);
+  const idx = photos.findIndex((p) => p.secure_url === photo.secure_url);
   const prev = idx > 0 ? photos[idx - 1] : null;
   const next = idx >= 0 && idx < photos.length - 1 ? photos[idx + 1] : null;
 
@@ -41,18 +51,15 @@ export default function Lightbox({ photo, photos, onClose, onNavigate }: Lightbo
       >
         <div className="relative w-full h-full max-w-[95vw] max-h-[90vh]">
           <Image
-            src={photo.image_url}
-            alt={photo.title || "Photo"}
+            src={photo.secure_url}
+            alt={photo.context?.custom?.alt || "Photo"}
             fill
             className="object-contain rounded"
             sizes="(max-width: 95vw) 100vw, 95vw"
           />
         </div>
         <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black to-transparent text-white">
-          <p className="font-display text-xl">{photo.title || "Untitled"}</p>
-          {photo.description && (
-            <p className="text-white/80 text-sm mt-1 max-w-xl">{photo.description}</p>
-          )}
+          <p className="font-display text-xl">{photo.context?.custom?.caption || "Untitled"}</p>
         </div>
       </div>
 

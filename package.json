@@ -10,6 +10,9 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
+    "@uploadcare/blocks": "^0.50.4",
+    "@uploadcare/rest-client": "^6.18.4",
+    "@uploadcare/upload-client": "^6.18.4",
     "bcryptjs": "^2.4.3",
     "browser-image-compression": "^2.0.2",
     "cloudinary": "^2.9.0",

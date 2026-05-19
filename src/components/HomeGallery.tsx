@@ -1,73 +1,68 @@
+
 import Link from "next/link";
 import Image from "next/image";
-import type { Photo } from "@/lib/supabase";
+
+// Define the Photo type based on Cloudinary's API response
+export interface Photo {
+  secure_url: string;
+  context?: {
+    custom?: {
+      category?: string;
+      show_in_recent?: string;
+    };
+  };
+}
+
 
 interface HomeGalleryProps {
   photos: Photo[];
 }
 
 const CATEGORIES = [
-  { id: "wedding", title: "Wedding Moments", desc: "Romantic wedding photography", icon: "fa-heart" },
-  { id: "portrait", title: "Portrait Sessions", desc: "Professional headshots & portraits", icon: "fa-user" },
-  { id: "events", title: "Corporate Events", desc: "Business events & conferences", icon: "fa-briefcase" },
-  { id: "landscape", title: "Landscape", desc: "Stunning scenery & nature", icon: "fa-mountain-sun" },
-  { id: "street", title: "Street Photography", desc: "Urban moments & candid shots", icon: "fa-city" },
-  { id: "general", title: "Lifestyle Shoots", desc: "Candid lifestyle photography", icon: "fa-camera" },
+  { id: "wedding", title: "Wedding Photography", desc: "Your Love Story, Perfectly Told" },
+  { id: "pre-wedding", title: "Pre-Wedding Photography", desc: "The Journey Begins" },
+  { id: "maternity-baby", title: "Maternity & Baby Shoots", desc: "Cherishing Every Milestone" },
+  { id: "product", title: "Product Photography", desc: "Elevate Your Brand" },
+  { id: "modeling", title: "Modeling", desc: "Showcase Your Best Self" },
+  { id: "interior", title: "Interior", desc: "Showcase Your Best Self" },
 ];
 
 export default function HomeGallery({ photos }: HomeGalleryProps) {
-  // Get one photo per category for preview, or use first 6 photos
-  const getPhotosForPreview = () => {
-    if (photos.length === 0) return CATEGORIES.map((c) => ({ ...c, imageUrl: null }));
-    const byCategory: Record<string, Photo> = {};
-    for (const p of photos) {
-      const cat = (p.category || "general").toLowerCase();
-      if (!byCategory[cat]) byCategory[cat] = p;
-    }
-    return CATEGORIES.map((c) => ({
-      ...c,
-      imageUrl: byCategory[c.id]?.image_url ?? photos[CATEGORIES.indexOf(c) % photos.length]?.image_url ?? null,
-    }));
+  const getPhotoForCategory = (categoryId: string) => {
+    const categoryPhotos = photos.filter(p => p.context?.custom?.category === categoryId);
+    return categoryPhotos[0] ?? photos.find(p => p.context?.custom?.show_in_recent === 'true') ?? null;
   };
 
-  const previewItems = getPhotosForPreview();
-
   return (
-    <section id="gallery" className="py-[120px] bg-white">
-      <div className="max-w-[1200px] mx-auto px-8">
-        <h2 className="font-display text-4xl text-center mb-16 text-charcoal relative">
-          Recent Work
-          <span className="block w-[60px] h-[3px] bg-accent mx-auto mt-4" />
-        </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mt-12">
-          {previewItems.map((item) => (
-            <Link
-              key={item.id}
-              href={`/gallery?category=${item.id}`}
-              className="block group"
-            >
-              <div className="relative overflow-hidden rounded-[20px] shadow-[0_25px_50px_rgba(0,0,0,0.15)] transition-all duration-400 hover:-translate-y-4 hover:shadow-[0_35px_70px_rgba(0,0,0,0.25)] cursor-pointer">
-                {item.imageUrl ? (
-                  <Image src={item.imageUrl} alt={item.title} width={400} height={350} className="w-full h-[180px] sm:h-[280px] lg:h-[350px] object-cover transition-transform duration-400 group-hover:scale-110" />
-                ) : (
-                  <div className="w-full h-[180px] sm:h-[280px] lg:h-[350px] bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                    <span className="text-6xl text-gray-400">
-                      {item.icon === "fa-heart" && "❤"}
-                      {item.icon === "fa-user" && "👤"}
-                      {item.icon === "fa-briefcase" && "💼"}
-                      {item.icon === "fa-mountain-sun" && "🏔"}
-                      {item.icon === "fa-city" && "🏙"}
-                      {item.icon === "fa-camera" && "📷"}
-                    </span>
+    <section id="gallery" className="py-20 bg-white">
+      <div className="container mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {CATEGORIES.map((category) => {
+            const photo = getPhotoForCategory(category.id);
+            return (
+              <div key={category.id} className="group relative overflow-hidden rounded-lg shadow-lg">
+                <Link href={`/gallery?category=${category.id}`}>
+                  {photo ? (
+                    <Image
+                      src={photo.secure_url}
+                      alt={category.title}
+                      width={400}
+                      height={400}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gray-200"></div>
+                  )}
+                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+                    <div className="text-center text-white">
+                      <h3 className="text-2xl font-display mb-2">{category.title}</h3>
+                      <p className="text-lg">{category.desc}</p>
+                    </div>
                   </div>
-                )}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent text-white py-10 px-8 translate-y-full group-hover:translate-y-0 transition-transform duration-400">
-                  <div className="font-display text-2xl mb-2">{item.title}</div>
-                  <div className="text-white/90">{item.desc}</div>
-                </div>
+                </Link>
               </div>
-            </Link>
-          ))}
+            );
+          })}
         </div>
         <div className="text-center mt-12">
           <Link
